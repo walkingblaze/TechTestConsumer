@@ -1,0 +1,120 @@
+﻿@model TechTestConsumer.Models.ChequeModal
+
+@Scripts.Render("~/bundles/jquery")
+@Scripts.Render("~/bundles/jqueryval")
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-horizontal">
+        <h4>Enter Details:</h4>
+        <hr /> 
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <div class="form-group">
+            @Html.Label("Name", htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.FullName, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.FullName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Currency, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Currency, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Currency, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="button" value="Convert to words" onclick="convert();" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+<div class="panel panel-default detail">
+    <div class="panel-heading">Output:</div>
+    <div class="panel-body">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="control-label col-md-2">Name</label>
+                <label id="lbFullName" class="control-label col-md-10"></label>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-md-2">Currency in words</label>
+                <label id="lbCurrency" class="control-label col-md-10"></label>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="panel panel-default notification">
+    <div class="panel-heading">Error:</div>
+    <div class="panel-body">
+        <div class="alert alert-danger">
+            <strong id="message"></strong>
+        </div>
+    </div>
+</div>
+<style>
+    .detail, .notification {
+        display: none;
+    }
+    .detail #lbFullName, .detail #lbCurrency {
+        text-align: left;
+    }
+</style>
+    <script type="text/javascript">
+        var convert = function () {
+            resetNotification();
+            reset();
+
+            var fullName = $('#FullName').val();
+            if (fullName === '') {
+                showNotification('Fullname can not be empty!');
+                return;
+            } else {
+                $('#lbFullName').text(fullName);
+            }
+            var toConvert = $('#Currency').val();
+            if (toConvert) {
+                $.ajax({
+                    url: 'http://localhost:49714/',
+                    type: 'GET',
+                    data: { currency: toConvert },
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.Status === 200) {
+                            if (data.CurrencyInWords) {
+                                $('#lbCurrency').text(data.CurrencyInWords);
+                                $('.detail').show();
+                            }
+                        } else {
+
+                            showNotification(data.Message);
+                        }
+                    }
+                });
+            } else {
+                showNotification('Currency can not be empty or is not valid!');
+            }
+        }
+        var reset = function () {
+            $('#lbFullName').text('');
+            $('#lbCurrency').text('');
+            $('.detail').hide();
+        };
+
+        var resetNotification = function() {
+            $('#message').text('');
+            $('.notification').hide();
+        };
+
+        var showNotification = function(message) {
+            $('#message').text(message);
+            $('.notification').show();
+        };
+    </script>
